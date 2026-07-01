@@ -5,98 +5,169 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>美租激励查询系统</title>
     <style>
-        *{box-sizing:border-box;margin:0;padding:0}
-        body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:#f5f7fa;color:#333;min-height:100vh}
-        .container{max-width:700px;margin:0 auto;padding:16px}
-        h1{text-align:center;color:#1a73e8;margin:20px 0 8px;font-size:1.4em}
-        .subtitle{text-align:center;color:#888;font-size:.85em;margin-bottom:20px}
-        .tabs{display:flex;gap:0;margin-bottom:16px;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.08)}
-        .tab{flex:1;padding:14px;text-align:center;font-weight:700;cursor:pointer;background:#fff;color:#888;transition:all .2s;border:none;font-size:1em}
-        .tab.active-broker{background:#2e7d32;color:#fff}
-        .tab.active-manager{background:#1565c0;color:#fff}
-        .search-box{display:flex;gap:8px;margin-bottom:16px}
-        .search-box input{flex:1;padding:12px 16px;border:2px solid #e0e0e0;border-radius:10px;font-size:1em;outline:none;transition:border-color .2s}
-        .search-box input:focus{border-color:#1a73e8}
-        .search-box button{padding:12px 20px;background:#1a73e8;color:#fff;border:none;border-radius:10px;font-size:1em;cursor:pointer;font-weight:600}
-        .search-box button:hover{background:#1557b0}
-        .stats{background:#fff;border-radius:12px;padding:12px 16px;margin-bottom:16px;box-shadow:0 1px 4px rgba(0,0,0,.06);font-size:.9em;color:#666;display:flex;gap:16px;flex-wrap:wrap}
-        .stats span{color:#1a73e8;font-weight:700}
-        .result-card{background:#fff;border-radius:12px;padding:16px;margin-bottom:10px;box-shadow:0 1px 6px rgba(0,0,0,.06)}
-        .result-card .field{display:flex;justify-content:space-between;padding:4px 0;font-size:.9em}
-        .result-card .field .label{color:#888}
-        .result-card .field .value{font-weight:600;color:#333}
-        .result-card .field .value.highlight{color:#1a73e8}
-        .empty{text-align:center;padding:40px;color:#bbb;font-size:1.1em}
-        .period-tag{display:inline-block;background:#e8f0fe;color:#1a73e8;padding:2px 8px;border-radius:6px;font-size:.8em;font-weight:600}
-        .amount{color:#2e7d32;font-weight:700}
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f5f7fa; color: #333; min-height: 100vh; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        h1 { text-align: center; color: #1a73e8; margin: 30px 0 10px; font-size: 1.6em; }
+        .subtitle { text-align: center; color: #888; font-size: 0.9em; margin-bottom: 30px; }
+        .cards { display: flex; flex-direction: column; gap: 16px; }
+        .card { background: white; border-radius: 16px; box-shadow: 0 2px 12px rgba(0,0,0,0.08); padding: 24px; text-decoration: none; color: inherit; transition: transform 0.15s, box-shadow 0.15s; cursor: pointer; }
+        .card:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.12); }
+        .card-icon { font-size: 2.5em; margin-bottom: 10px; }
+        .card-title { font-size: 1.3em; font-weight: 700; margin-bottom: 6px; }
+        .card-title.broker { color: #2e7d32; }
+        .card-title.manager { color: #1565c0; }
+        .card-desc { color: #888; font-size: 0.9em; line-height: 1.5; }
+
+        /* 查询页共用样式 */
+        .back-link { display: inline-block; color: #1a73e8; text-decoration: none; margin-bottom: 16px; font-size: 0.9em; cursor: pointer; }
+        .back-link:hover { text-decoration: underline; }
+        .search-box { display: flex; gap: 8px; margin-bottom: 20px; }
+        .search-box input { flex: 1; padding: 12px 16px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 16px; outline: none; transition: border-color 0.2s; }
+        .hint { color: #999; font-size: 0.85em; margin-bottom: 16px; }
+
+        /* 汇总卡片 */
+        .summary-card { background: white; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); padding: 16px 20px; margin-bottom: 12px; }
+        .summary-name { font-size: 1.2em; font-weight: 700; }
+        .summary-meta { color: #666; font-size: 0.9em; margin-top: 4px; }
+        .summary-stats { display: flex; gap: 16px; margin-top: 10px; }
+        .summary-stat { border-radius: 8px; padding: 8px 14px; text-align: center; }
+        .summary-stat-value { font-size: 1.2em; font-weight: 700; }
+        .summary-stat-label { font-size: 0.8em; color: #666; margin-top: 2px; }
+
+        /* 经纪人配色 */
+        .broker-theme h1, .broker-theme .summary-name, .broker-theme .summary-stat-value { color: #2e7d32; }
+        .broker-theme .search-box input:focus { border-color: #2e7d32; }
+        .broker-theme .search-box button { background: #2e7d32; color: white; border: none; border-radius: 8px; font-size: 16px; cursor: pointer; white-space: nowrap; padding: 12px 24px; }
+        .broker-theme .search-box button:hover { background: #1b5e20; }
+        .broker-theme .summary-card { border-left: 4px solid #2e7d32; }
+        .broker-theme .summary-stat { background: #e8f5e9; }
+        .broker-theme .cash { color: #c62828; font-weight: 600; }
+        .broker-theme .period-tag { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 0.85em; background: #e8f5e9; color: #2e7d32; }
+
+        /* 资管配色 */
+        .manager-theme h1, .manager-theme .summary-name, .manager-theme .summary-stat-value { color: #1565c0; }
+        .manager-theme .search-box input:focus { border-color: #1565c0; }
+        .manager-theme .search-box button { background: #1565c0; color: white; border: none; border-radius: 8px; font-size: 16px; cursor: pointer; white-space: nowrap; padding: 12px 24px; }
+        .manager-theme .search-box button:hover { background: #0d47a1; }
+        .manager-theme .summary-card { border-left: 4px solid #1565c0; }
+        .manager-theme .summary-stat { background: #e3f2fd; }
+        .manager-theme .perf { color: #1565c0; font-weight: 600; }
+        .manager-theme .period-tag { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 0.85em; background: #e3f2fd; color: #1565c0; }
+
+        /* 表格 */
+        .detail-table { width: 100%; background: white; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); overflow: hidden; border-collapse: collapse; margin-top: 12px; }
+        .detail-table th { background: #f0f4f8; padding: 10px 12px; text-align: left; font-size: 0.85em; color: #555; border-bottom: 1px solid #e8ecf0; white-space: nowrap; }
+        .detail-table td { padding: 10px 12px; font-size: 0.88em; border-bottom: 1px solid #f0f0f0; }
+        .detail-table tr:last-child td { border-bottom: none; }
+        .empty-state { text-align: center; padding: 40px 20px; color: #aaa; }
+        .empty-state .icon { font-size: 3em; margin-bottom: 10px; }
+        .section-title { font-size: 1em; font-weight: 600; margin: 20px 0 8px; color: #555; }
+
+        .page { display: none; }
+        .page.active { display: block; }
     </style>
 </head>
 <body>
-<div class="container">
+<!-- 首页 -->
+<div class="container page active" id="pageHome">
     <h1>美租激励查询系统</h1>
-    <p class="subtitle">贝壳惠居·美租事业部</p>
-    <div class="tabs">
-        <button class="tab active-broker" id="tabBroker" onclick="switchTab('broker')">经纪人激励</button>
-        <button class="tab" id="tabManager" onclick="switchTab('manager')">资管业绩</button>
+    <p class="subtitle">选择查询维度</p>
+    <div class="cards">
+        <div class="card" onclick="showPage('broker')">
+            <div class="card-icon">🏠</div>
+            <div class="card-title broker">经纪人激励查询</div>
+            <div class="card-desc">按房源编码、经纪人工号或姓名查询推房激励明细</div>
+        </div>
+        <div class="card" onclick="showPage('manager')">
+            <div class="card-icon">📊</div>
+            <div class="card-title manager">资管业绩查询</div>
+            <div class="card-desc">按房源编码、资管工号或姓名查询美租业绩明细</div>
+        </div>
     </div>
-    <div class="search-box">
-        <input type="text" id="searchInput" placeholder="输入经纪人姓名/工号/房源编码搜索" onkeydown="if(event.key==='Enter')doSearch()">
-        <button onclick="doSearch()">查询</button>
-    </div>
-    <div class="stats" id="stats"></div>
-    <div id="results"></div>
 </div>
+
+<!-- 经纪人查询页 -->
+<div class="container page broker-theme" id="pageBroker">
+    <span class="back-link" onclick="showPage('home')">← 返回首页</span>
+    <h1>🏠 经纪人激励查询</h1>
+    <div class="search-box">
+        <input type="text" id="brokerInput" placeholder="输入房源编码 / 工号 / 姓名..." onkeydown="if(event.key==='Enter')searchBroker()">
+        <button onclick="searchBroker()">查询</button>
+    </div>
+    <p class="hint">示例：彭程、30041362、107114627442</p>
+    <div id="brokerResults"></div>
+</div>
+
+<!-- 资管查询页 -->
+<div class="container page manager-theme" id="pageManager">
+    <span class="back-link" onclick="showPage('home')">← 返回首页</span>
+    <h1>📊 资管业绩查询</h1>
+    <div class="search-box">
+        <input type="text" id="managerInput" placeholder="输入房源编码 / 工号 / 姓名..." onkeydown="if(event.key==='Enter')searchManager()">
+        <button onclick="searchManager()">查询</button>
+    </div>
+    <p class="hint">示例：张羿、22151473、107114627442</p>
+    <div id="managerResults"></div>
+</div>
+
 <script src="data.js"></script>
 <script>
-let currentTab='broker';
-function switchTab(tab){
-    currentTab=tab;
-    document.getElementById('tabBroker').className=tab==='broker'?'tab active-broker':'tab';
-    document.getElementById('tabManager').className=tab==='manager'?'tab active-manager':'tab';
-    document.getElementById('searchInput').value='';
-    document.getElementById('results').innerHTML='';
-    document.getElementById('stats').innerHTML='';
-    document.getElementById('searchInput').placeholder=tab==='broker'?'输入经纪人姓名/工号/房源编码搜索':'输入资管姓名/工号/房源编码搜索';
+function showPage(name) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    if (name === 'home') document.getElementById('pageHome').classList.add('active');
+    else if (name === 'broker') { document.getElementById('pageBroker').classList.add('active'); document.getElementById('brokerInput').focus(); }
+    else if (name === 'manager') { document.getElementById('pageManager').classList.add('active'); document.getElementById('managerInput').focus(); }
 }
-function doSearch(){
-    const q=document.getElementById('searchInput').value.trim();
-    if(!q){document.getElementById('results').innerHTML='<div class="empty">请输入搜索关键词</div>';return}
-    const data=currentTab==='broker'?DB_DATA.broker:DB_DATA.manager;
-    const fields=currentTab==='broker'?['property_code','broker_id','broker_name']:['property_code','manager_id','manager_name'];
-    const matched=data.filter(r=>fields.some(f=>String(r[f]||'').includes(q)));
-    if(currentTab==='broker'){
-        const totalCash=matched.reduce((s,r)=>s+r.cash,0);
-        document.getElementById('stats').innerHTML='找到 <span>'+matched.length+'</span> 条 · 合计 <span>'+totalCash.toLocaleString()+'</span> 元';
-    }else{
-        const totalAmount=matched.reduce((s,r)=>s+r.contract_amount,0);
-        const totalPerf=matched.reduce((s,r)=>s+r.performance,0);
-        document.getElementById('stats').innerHTML='找到 <span>'+matched.length+'</span> 条 · 合同 <span>'+totalAmount.toLocaleString()+'</span> 元 · 业绩 <span>'+totalPerf.toLocaleString()+'</span> 元';
-    }
-    if(!matched.length){document.getElementById('results').innerHTML='<div class="empty">未找到匹配记录</div>';return}
-    let html='';
-    matched.forEach(r=>{
-        if(currentTab==='broker'){
-            html+='<div class="result-card">'
-                +'<div class="field"><span class="label">房源编码</span><span class="value">'+r.property_code+'</span></div>'
-                +'<div class="field"><span class="label">装修产品</span><span class="value">'+(r.product_name||'')+'</span></div>'
-                +'<div class="field"><span class="label">经纪人</span><span class="value highlight">'+r.broker_name+'（'+r.broker_id+'）</span></div>'
-                +'<div class="field"><span class="label">获得激励</span><span class="value amount">'+r.cash+'元</span></div>'
-                +'<div class="field"><span class="label">定金支付</span><span class="value">'+(r.pay_time||'').substring(0,10)+'</span></div>'
-                +'<div class="field"><span class="label">发放月份</span><span class="value"><span class="period-tag">'+r.period+'</span></span></div>'
-                +'</div>';
-        }else{
-            html+='<div class="result-card">'
-                +'<div class="field"><span class="label">房源编码</span><span class="value">'+r.property_code+'</span></div>'
-                +'<div class="field"><span class="label">资管经理</span><span class="value highlight">'+r.manager_name+'（'+r.manager_id+'）</span></div>'
-                +'<div class="field"><span class="label">合同金额</span><span class="value">'+(r.contract_amount||0).toLocaleString()+'元</span></div>'
-                +'<div class="field"><span class="label">美租业绩</span><span class="value amount">'+(r.performance||0).toLocaleString()+'元</span></div>'
-                +'<div class="field"><span class="label">定金支付</span><span class="value">'+(r.pay_time||'').substring(0,10)+'</span></div>'
-                +'<div class="field"><span class="label">发放月份</span><span class="value"><span class="period-tag">'+r.period+'</span></span></div>'
-                +(r.remark?'<div class="field"><span class="label">备注</span><span class="value">'+r.remark+'</span></div>':'')
-                +'</div>';
-        }
+
+function searchBroker() {
+    const q = document.getElementById('brokerInput').value.trim();
+    if (!q) return;
+    const matched = DB_DATA.broker.filter(r => ['property_code','broker_id','broker_name'].some(f => String(r[f]||'').includes(q)));
+    const el = document.getElementById('brokerResults');
+    if (!matched.length) { el.innerHTML = '<div class="empty-state"><div class="icon">🔍</div><div>未找到"' + q + '"的经纪人激励记录</div></div>'; return; }
+    // 汇总
+    const byName = {};
+    matched.forEach(r => {
+        const k = r.broker_name + '|' + r.broker_id;
+        if (!byName[k]) byName[k] = { name: r.broker_name, id: r.broker_id, count: 0, total_cash: 0 };
+        byName[k].count++; byName[k].total_cash += r.cash;
     });
-    document.getElementById('results').innerHTML=html;
+    let html = '';
+    Object.values(byName).forEach(s => {
+        html += '<div class="summary-card"><div class="summary-name">' + s.name + '</div><div class="summary-meta">' + (s.id ? '工号：' + s.id : '') + '</div><div class="summary-stats"><div class="summary-stat"><div class="summary-stat-value">' + s.count + '</div><div class="summary-stat-label">总套数</div></div><div class="summary-stat"><div class="summary-stat-value cash">' + s.total_cash.toLocaleString() + '元</div><div class="summary-stat-label">总激励</div></div></div></div>';
+    });
+    // 明细
+    html += '<div class="section-title">房源明细</div><table class="detail-table"><thead><tr><th>房源编码</th><th>定金支付时间</th><th>装修产品</th><th>获得激励</th><th>发放月份</th></tr></thead><tbody>';
+    matched.forEach(d => {
+        html += '<tr><td>' + d.property_code + '</td><td>' + (d.pay_time||'').substring(0,10) + '</td><td>' + (d.product_name||'') + '</td><td class="cash">' + d.cash.toLocaleString() + '元</td><td><span class="period-tag">' + d.period + '</span></td></tr>';
+    });
+    html += '</tbody></table>';
+    el.innerHTML = html;
+}
+
+function searchManager() {
+    const q = document.getElementById('managerInput').value.trim();
+    if (!q) return;
+    const matched = DB_DATA.manager.filter(r => ['property_code','manager_id','manager_name'].some(f => String(r[f]||'').includes(q)));
+    const el = document.getElementById('managerResults');
+    if (!matched.length) { el.innerHTML = '<div class="empty-state"><div class="icon">🔍</div><div>未找到"' + q + '"的资管业绩记录</div></div>'; return; }
+    const byName = {};
+    matched.forEach(r => {
+        const k = r.manager_name + '|' + r.manager_id;
+        if (!byName[k]) byName[k] = { name: r.manager_name, id: r.manager_id, count: 0, total_perf: 0, total_contract: 0 };
+        byName[k].count++; byName[k].total_perf += r.performance; byName[k].total_contract += r.contract_amount;
+    });
+    let html = '';
+    Object.values(byName).forEach(s => {
+        html += '<div class="summary-card"><div class="summary-name">' + s.name + '</div><div class="summary-meta">' + (s.id ? '工号：' + s.id : '') + '</div><div class="summary-stats"><div class="summary-stat"><div class="summary-stat-value">' + s.count + '</div><div class="summary-stat-label">总套数</div></div><div class="summary-stat"><div class="summary-stat-value perf">' + s.total_perf.toLocaleString() + '元</div><div class="summary-stat-label">总业绩</div></div><div class="summary-stat"><div class="summary-stat-value">' + s.total_contract.toLocaleString() + '元</div><div class="summary-stat-label">总合同额</div></div></div></div>';
+    });
+    html += '<div class="section-title">房源明细</div><table class="detail-table"><thead><tr><th>房源编码</th><th>定金支付时间</th><th>合同金额</th><th>美租业绩</th><th>发放月份</th><th>备注</th></tr></thead><tbody>';
+    matched.forEach(d => {
+        html += '<tr><td>' + d.property_code + '</td><td>' + (d.pay_time||'').substring(0,10) + '</td><td>' + (d.contract_amount||0).toLocaleString() + '元</td><td class="perf">' + (d.performance||0).toLocaleString() + '元</td><td><span class="period-tag">' + d.period + '</span></td><td>' + (d.remark||'') + '</td></tr>';
+    });
+    html += '</tbody></table>';
+    el.innerHTML = html;
 }
 </script>
 </body>
