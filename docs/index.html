@@ -98,6 +98,7 @@
         <button onclick="searchBroker()">查询</button>
     </div>
     <p class="hint">示例：彭程、30041362、107114627442</p>
+    <p class="notice">如需查询当月【美租激励】可于岁岁有余-应发收入-工资小计-税前其他补款进行查看</p>
     <div id="brokerResults"></div>
 </div>
 
@@ -140,9 +141,9 @@ function searchBroker() {
         html += '<div class="summary-card"><div class="summary-name">' + s.name + '</div><div class="summary-meta">' + (s.id ? '工号：' + s.id : '') + '</div><div class="summary-stats"><div class="summary-stat"><div class="summary-stat-value">' + s.count + '</div><div class="summary-stat-label">总套数</div></div><div class="summary-stat"><div class="summary-stat-value cash">' + s.total_cash.toLocaleString() + '元</div><div class="summary-stat-label">总激励</div></div></div></div>';
     });
     // 明细
-    html += '<div class="section-title">房源明细</div><table class="detail-table"><thead><tr><th>房源编码</th><th>定金支付时间</th><th>装修产品</th><th>获得激励</th><th>发放月份</th></tr></thead><tbody>';
+    html += '<div class="section-title">房源明细</div><table class="detail-table"><thead><tr><th>房源编码</th><th>定金支付时间</th><th>装修产品</th><th>获得激励</th><th>发放月份</th><th>备注</th></tr></thead><tbody>';
     matched.forEach(d => {
-        html += '<tr><td>' + d.property_code + '</td><td>' + (d.pay_time||'').substring(0,10) + '</td><td>' + (d.product_name||'') + '</td><td class="cash">' + d.cash.toLocaleString() + '元</td><td><span class="period-tag">' + d.period + '</span></td></tr>';
+        html += '<tr><td>' + d.property_code + '</td><td>' + (d.pay_time||'').substring(0,10) + '</td><td>' + (d.product_name||'') + '</td><td class="cash">' + d.cash.toLocaleString() + '元</td><td><span class="period-tag">' + d.period + '</span></td><td>如需查询当月【美租激励】可于岁岁有余-应发收入-工资小计-税前其他补款进行查看</td></tr>';
     });
     html += '</tbody></table>';
     el.innerHTML = html;
