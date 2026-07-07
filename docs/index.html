@@ -10,6 +10,7 @@
         .container { max-width: 600px; margin: 0 auto; padding: 20px; }
         h1 { text-align: center; color: #1a73e8; margin: 30px 0 10px; font-size: 1.6em; }
         .subtitle { text-align: center; color: #888; font-size: 0.9em; margin-bottom: 30px; }
+        .notice { text-align: center; color: #666; font-size: 0.85em; margin-bottom: 20px; padding: 10px 16px; background: #fff8e1; border-radius: 8px; border: 1px solid #ffe082; line-height: 1.6; }
         .cards { display: flex; flex-direction: column; gap: 16px; }
         .card { background: white; border-radius: 16px; box-shadow: 0 2px 12px rgba(0,0,0,0.08); padding: 24px; text-decoration: none; color: inherit; transition: transform 0.15s, box-shadow 0.15s; cursor: pointer; }
         .card:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.12); }
@@ -73,6 +74,7 @@
 <div class="container page active" id="pageHome">
     <h1>美租激励查询系统</h1>
     <p class="subtitle">选择查询维度</p>
+    <p class="notice">如需查询当月【美租激励】可于岁岁有余-应发收入-工资小计-税前其他补款进行查看</p>
     <div class="cards">
         <div class="card" onclick="showPage('broker')">
             <div class="card-icon">🏠</div>
