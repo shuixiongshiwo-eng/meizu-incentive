@@ -212,7 +212,7 @@ function buildRankings() {
     });
 
     function sortDesc(obj) {
-        return Object.values(obj).sort(function(a, b) { return b.value - a.value; });
+        return Object.values(obj).filter(function(x) { return x.value > 0; }).sort(function(a, b) { return b.value - a.value; });
     }
 
     _rankingData = [
@@ -241,7 +241,6 @@ function renderRanking(tabIndex) {
     var medals = ['🥇', '🥈', '🥉'];
     var html = '<div class="rank-list">';
     list.forEach(function(item, i) {
-        if (item.value <= 0) return;
         var rank = i + 1;
         var cls = rank <= 3 ? ' top' + rank : '';
         var medalHtml = rank <= 3 ? '<span class="rank-medal">' + medals[rank - 1] + '</span>' : '<span class="rank-num">' + rank + '</span>';
