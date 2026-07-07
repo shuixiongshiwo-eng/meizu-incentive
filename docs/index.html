@@ -74,7 +74,7 @@
 <div class="container page active" id="pageHome">
     <h1>美租激励查询系统</h1>
     <p class="subtitle">选择查询维度</p>
-    <p class="notice">如需查询当月【美租激励】可于岁岁有余-应发收入-工资小计-税前其他补款进行查看</p>
+    <p class="notice">链家经纪人如需查询当月【美租激励】可于岁岁有余-应发收入-工资小计-税前其他补款进行查看（当月具体查询时间链家以链家公布为准）</p>
     <div class="cards">
         <div class="card" onclick="showPage('broker')">
             <div class="card-icon">🏠</div>
@@ -98,7 +98,7 @@
         <button onclick="searchBroker()">查询</button>
     </div>
     <p class="hint">示例：彭程、30041362、107114627442</p>
-    <p class="notice">如需查询当月【美租激励】可于岁岁有余-应发收入-工资小计-税前其他补款进行查看</p>
+    <p class="notice">链家经纪人如需查询当月【美租激励】可于岁岁有余-应发收入-工资小计-税前其他补款进行查看（当月具体查询时间链家以链家公布为准）</p>
     <div id="brokerResults"></div>
 </div>
 
@@ -143,7 +143,7 @@ function searchBroker() {
     // 明细
     html += '<div class="section-title">房源明细</div><table class="detail-table"><thead><tr><th>房源编码</th><th>定金支付时间</th><th>装修产品</th><th>获得激励</th><th>发放月份</th><th>备注</th></tr></thead><tbody>';
     matched.forEach(d => {
-        html += '<tr><td>' + d.property_code + '</td><td>' + (d.pay_time||'').substring(0,10) + '</td><td>' + (d.product_name||'') + '</td><td class="cash">' + d.cash.toLocaleString() + '元</td><td><span class="period-tag">' + d.period + '</span></td><td>如需查询当月【美租激励】可于岁岁有余-应发收入-工资小计-税前其他补款进行查看</td></tr>';
+        html += '<tr><td>' + d.property_code + '</td><td>' + (d.pay_time||'').substring(0,10) + '</td><td>' + (d.product_name||'') + '</td><td class="cash">' + d.cash.toLocaleString() + '元</td><td><span class="period-tag">' + d.period + '</span></td><td>链家经纪人如需查询当月【美租激励】可于岁岁有余-应发收入-工资小计-税前其他补款进行查看（当月具体查询时间链家以链家公布为准）</td></tr>';
     });
     html += '</tbody></table>';
     el.innerHTML = html;
