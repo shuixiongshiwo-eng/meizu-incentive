@@ -18,6 +18,7 @@
         .card-title { font-size: 1.3em; font-weight: 700; margin-bottom: 6px; }
         .card-title.broker { color: #2e7d32; }
         .card-title.manager { color: #1565c0; }
+        .card-title.ranking { color: #f57c00; }
         .card-desc { color: #888; font-size: 0.9em; line-height: 1.5; }
 
         /* 查询页共用样式 */
@@ -67,6 +68,23 @@
 
         .page { display: none; }
         .page.active { display: block; }
+
+        /* 排行榜配色 */
+        .ranking-theme h1 { color: #f57c00; }
+        .tab-bar { display: flex; gap: 0; background: #fff; border-radius: 10px; overflow: hidden; margin-bottom: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+        .tab-bar .tab { flex: 1; text-align: center; padding: 10px 4px; font-size: 0.82em; cursor: pointer; transition: background 0.2s, color 0.2s; color: #666; border-bottom: 3px solid transparent; }
+        .tab-bar .tab.active { color: #f57c00; font-weight: 700; background: #fff3e0; border-bottom: 3px solid #f57c00; }
+        .rank-list { margin-top: 8px; }
+        .rank-item { display: flex; align-items: center; background: white; border-radius: 10px; padding: 12px 16px; margin-bottom: 8px; box-shadow: 0 1px 6px rgba(0,0,0,0.05); }
+        .rank-item.top1 { background: linear-gradient(135deg, #fff8e1, #ffecb3); border-left: 4px solid #ffc107; }
+        .rank-item.top2 { background: linear-gradient(135deg, #f5f5f5, #e0e0e0); border-left: 4px solid #9e9e9e; }
+        .rank-item.top3 { background: linear-gradient(135deg, #fbe9e7, #ffccbc); border-left: 4px solid #ff7043; }
+        .rank-medal { font-size: 1.4em; margin-right: 10px; min-width: 28px; text-align: center; }
+        .rank-num { font-size: 1em; font-weight: 700; color: #aaa; margin-right: 10px; min-width: 28px; text-align: center; }
+        .rank-info { flex: 1; }
+        .rank-name { font-weight: 700; font-size: 1em; }
+        .rank-id { color: #999; font-size: 0.82em; }
+        .rank-amount { font-weight: 700; font-size: 1.1em; color: #f57c00; white-space: nowrap; }
     </style>
 </head>
 <body>
@@ -85,6 +103,11 @@
             <div class="card-icon">📊</div>
             <div class="card-title manager">资管业绩查询</div>
             <div class="card-desc">按房源编码、资管工号或姓名查询美租业绩明细</div>
+        </div>
+        <div class="card" onclick="showPage('ranking')">
+            <div class="card-icon">🏆</div>
+            <div class="card-title ranking">2026年度排行榜</div>
+            <div class="card-desc">经纪人/资管年度累计业绩排行</div>
         </div>
     </div>
 </div>
@@ -114,6 +137,19 @@
     <div id="managerResults"></div>
 </div>
 
+<!-- 排行榜页 -->
+<div class="container page ranking-theme" id="pageRanking">
+    <span class="back-link" onclick="showPage('home')">← 返回首页</span>
+    <h1>🏆 2026年度排行榜</h1>
+    <div class="tab-bar">
+        <div class="tab active" onclick="switchTab(0)">经纪人合同额</div>
+        <div class="tab" onclick="switchTab(1)">经纪人激励</div>
+        <div class="tab" onclick="switchTab(2)">资管业绩</div>
+        <div class="tab" onclick="switchTab(3)">资管合同额</div>
+    </div>
+    <div id="rankingList"></div>
+</div>
+
 <script src="data.js"></script>
 <script>
 function showPage(name) {
@@ -121,6 +157,99 @@ function showPage(name) {
     if (name === 'home') document.getElementById('pageHome').classList.add('active');
     else if (name === 'broker') { document.getElementById('pageBroker').classList.add('active'); document.getElementById('brokerInput').focus(); }
     else if (name === 'manager') { document.getElementById('pageManager').classList.add('active'); document.getElementById('managerInput').focus(); }
+    else if (name === 'ranking') { document.getElementById('pageRanking').classList.add('active'); buildRankings(); }
+}
+
+// 排行榜数据
+var _rankingData = null;
+var _rankingTab = 0;
+
+function buildRankings() {
+    if (_rankingData) { renderRanking(_rankingTab); return; }
+    var broker2026 = DB_DATA.broker.filter(function(r) { return r.period && r.period.startsWith('2026年'); });
+    var manager2026 = DB_DATA.manager.filter(function(r) { return r.period && r.period.startsWith('2026年'); });
+
+    // 1. 经纪人累计激励
+    var brokerCash = {};
+    broker2026.forEach(function(r) {
+        var k = r.broker_name + '|' + r.broker_id;
+        if (!brokerCash[k]) brokerCash[k] = { name: r.broker_name, id: r.broker_id, value: 0 };
+        brokerCash[k].value += r.cash;
+    });
+
+    // 2. 资管获得业绩
+    var managerPerf = {};
+    manager2026.forEach(function(r) {
+        var k = r.manager_name + '|' + r.manager_id;
+        if (!managerPerf[k]) managerPerf[k] = { name: r.manager_name, id: r.manager_id, value: 0 };
+        managerPerf[k].value += r.performance;
+    });
+
+    // 3. 资管累计合同额
+    var managerContract = {};
+    manager2026.forEach(function(r) {
+        var k = r.manager_name + '|' + r.manager_id;
+        if (!managerContract[k]) managerContract[k] = { name: r.manager_name, id: r.manager_id, value: 0 };
+        managerContract[k].value += r.contract_amount;
+    });
+
+    // 4. 经纪人累计合同额：先建 property_code→contract_amount（去重取max），再按经纪人分组sum
+    var propContract = {};
+    manager2026.forEach(function(r) {
+        if (!propContract[r.property_code] || r.contract_amount > propContract[r.property_code]) {
+            propContract[r.property_code] = r.contract_amount;
+        }
+    });
+    var brokerContract = {};
+    var brokerPropSeen = {};
+    broker2026.forEach(function(r) {
+        var k = r.broker_name + '|' + r.broker_id;
+        if (!brokerContract[k]) { brokerContract[k] = { name: r.broker_name, id: r.broker_id, value: 0 }; brokerPropSeen[k] = {}; }
+        if (propContract[r.property_code] && !brokerPropSeen[k][r.property_code]) {
+            brokerContract[k].value += propContract[r.property_code];
+            brokerPropSeen[k][r.property_code] = true;
+        }
+    });
+
+    function sortDesc(obj) {
+        return Object.values(obj).sort(function(a, b) { return b.value - a.value; });
+    }
+
+    _rankingData = [
+        sortDesc(brokerContract),
+        sortDesc(brokerCash),
+        sortDesc(managerPerf),
+        sortDesc(managerContract)
+    ];
+    renderRanking(0);
+}
+
+function switchTab(idx) {
+    _rankingTab = idx;
+    var tabs = document.querySelectorAll('.tab-bar .tab');
+    tabs.forEach(function(t, i) { t.classList.toggle('active', i === idx); });
+    renderRanking(idx);
+}
+
+function renderRanking(tabIndex) {
+    var list = _rankingData[tabIndex];
+    var el = document.getElementById('rankingList');
+    if (!list || !list.length) {
+        el.innerHTML = '<div class="empty-state"><div class="icon">📊</div><div>暂无数据</div></div>';
+        return;
+    }
+    var medals = ['🥇', '🥈', '🥉'];
+    var html = '<div class="rank-list">';
+    list.forEach(function(item, i) {
+        if (item.value <= 0) return;
+        var rank = i + 1;
+        var cls = rank <= 3 ? ' top' + rank : '';
+        var medalHtml = rank <= 3 ? '<span class="rank-medal">' + medals[rank - 1] + '</span>' : '<span class="rank-num">' + rank + '</span>';
+        var amountStr = item.value >= 10000 ? (item.value / 10000).toFixed(2) + '万元' : item.value.toLocaleString() + '元';
+        html += '<div class="rank-item' + cls + '">' + medalHtml + '<div class="rank-info"><div class="rank-name">' + item.name + '</div><div class="rank-id">' + (item.id ? '工号：' + item.id : '') + '</div></div><div class="rank-amount">' + amountStr + '</div></div>';
+    });
+    html += '</div>';
+    el.innerHTML = html;
 }
 
 function searchBroker() {
